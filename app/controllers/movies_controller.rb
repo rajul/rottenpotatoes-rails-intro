@@ -14,22 +14,20 @@ class MoviesController < ApplicationController
     @ordering = params[:order] || session[:order]
     @all_ratings = Movie.get_ratings()
 
-    @selected_ratings = if not params[:ratings].nil?
-      params[:ratings].keys
-    elsif not session[:ratings].nil?
-      session[:ratings]
-    else
-      @all_ratings
+    temp = {}
+    @all_ratings.each do |x|
+      temp[x] = 1
     end
 
-    session[:order] = @ordering
-    session[:ratings] = @selected_ratings
+    @selected_ratings = params[:ratings] || session[:ratings] || temp
 
-    if @ordering == false
-      @movies = Movie.where(:rating => @selected_ratings)
-    else
-      @movies = Movie.order(params[:order]).where(:rating => @selected_ratings)
+    if(params[:order] != session[:order] || params[:ratings] != session[:ratings])
+      session[:order] = @ordering
+      session[:ratings] = @selected_ratings
+      redirect_to movies_path(:order => @ordering, :ratings => @selected_ratings)
     end
+    
+    @movies = Movie.order(params[:order]).where(:rating => @selected_ratings.keys)
   end
 
   def new
